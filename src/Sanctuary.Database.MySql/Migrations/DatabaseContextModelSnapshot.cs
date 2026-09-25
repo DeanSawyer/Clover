@@ -435,6 +435,12 @@ namespace Sanctuary.Database.MySql.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("varchar(320)");
 
+                    b.Property<string>("EmailConfirmationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("IsAdmin")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
@@ -468,6 +474,12 @@ namespace Sanctuary.Database.MySql.Migrations
                         .IsRequired()
                         .HasMaxLength(254)
                         .HasColumnType("varchar(254)");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTimeOffset?>("PasswordResetTokenExpires")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Session")
                         .HasMaxLength(32)
