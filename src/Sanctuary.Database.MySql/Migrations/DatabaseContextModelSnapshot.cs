@@ -425,6 +425,12 @@ namespace Sanctuary.Database.MySql.Migrations
                         .HasColumnType("datetime(6)")
                         .HasDefaultValueSql("NOW()");
 
+                    b.Property<ulong?>("DiscordId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<string>("DiscordUsername")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Email")
                         .HasMaxLength(320)
                         .HasColumnType("varchar(320)");
