@@ -376,6 +376,50 @@ namespace Sanctuary.Database.MySql.Migrations
                     b.ToTable("Mounts");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbPendingModAction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("IssuedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<bool>("Processed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<ulong>("TargetUserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<DateTimeOffset?>("Until")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Processed");
+
+                    b.ToTable("PendingModActions");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbProfile", b =>
                 {
                     b.Property<int>("Id")
