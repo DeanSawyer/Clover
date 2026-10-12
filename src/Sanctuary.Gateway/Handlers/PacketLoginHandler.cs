@@ -156,18 +156,21 @@ public static class PacketLoginHandler
             }
         }
 
-        bool isReferee = character.User.IsMod || character.User.IsAdmin;
-        if (isReferee)
-        {
+        // Referee tracks Mod (plus Lead, who gets both jobs), Enforcer tracks
+        // Admin (plus Lead) - see the IsLead rework: these used to be granted
+        // as a single pair off IsMod || IsAdmin, now they're independent.
+        bool grantReferee = character.User.IsMod || character.User.IsLead;
+        bool grantEnforcer = character.User.IsAdmin || character.User.IsLead;
+
+        if (grantReferee)
             ProfileHelper.AddSpecialProfile(character, dbContext, _resourceManager, _logger, SpecialProfileIds.Referee);
-            ProfileHelper.AddSpecialProfile(character, dbContext, _resourceManager, _logger, SpecialProfileIds.Enforcer);
-        }
         else
-        {
-            // if user is no longer a mod, remove referee profile
             ProfileHelper.RemoveSpecialProfile(character, dbContext, _logger, SpecialProfileIds.Referee);
+
+        if (grantEnforcer)
+            ProfileHelper.AddSpecialProfile(character, dbContext, _resourceManager, _logger, SpecialProfileIds.Enforcer);
+        else
             ProfileHelper.RemoveSpecialProfile(character, dbContext, _logger, SpecialProfileIds.Enforcer);
-        }
 #if !DEBUG
         var result = dbContext.Characters
             .Where(x => x.Id == character.Id)

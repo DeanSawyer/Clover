@@ -78,7 +78,10 @@ public static class CharacterSelectInfoRequestHandler
                 }
             };
 
-            var firstProfile = character.Profiles.FirstOrDefault();
+            // Show the profile the character actually has active; Profiles has
+            // no defined order, so FirstOrDefault() could pick an empty one.
+            var firstProfile = character.Profiles.FirstOrDefault(x => x.Id == character.ActiveProfileId)
+                ?? character.Profiles.OrderBy(x => x.Id).FirstOrDefault();
 
             if (firstProfile is not null)
             {

@@ -23,8 +23,11 @@ public static class ChatHelper
             .Replace(">", "&gt;");
     }
 
-    public static ChatCommandRole GetRoleFromFlags(bool isAdmin, bool isMod)
+    public static ChatCommandRole GetRoleFromFlags(bool isLead, bool isAdmin, bool isMod)
     {
+        if (isLead)
+            return ChatCommandRole.Lead;
+
         if (isAdmin)
             return ChatCommandRole.Admin;
 

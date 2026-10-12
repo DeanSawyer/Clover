@@ -103,7 +103,7 @@ public class ModChatCommand : IChatCommand
     {
         var target = dbContext.Characters
             .Where(character => character.FullName == targetName)
-            .Select(character => new { character.UserId, character.User.IsAdmin, character.User.IsMod })
+            .Select(character => new { character.UserId, character.User.IsAdmin, character.User.IsMod, character.User.IsLead })
             .SingleOrDefault();
 
         if (target is null)
@@ -113,7 +113,7 @@ public class ModChatCommand : IChatCommand
             return false;
         }
 
-        ChatCommandRole targetRole = ChatHelper.GetRoleFromFlags(target.IsAdmin, target.IsMod);
+        ChatCommandRole targetRole = ChatHelper.GetRoleFromFlags(target.IsLead, target.IsAdmin, target.IsMod);
         if (!IsAuthorizedAgainstTarget(invoker.ChatCommandRole, targetRole))
         {
             ChatHelper.SendSystemMessage(invoker, "You don't have permission to target this player.");

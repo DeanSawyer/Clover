@@ -79,17 +79,31 @@ public class GatewayConnection : UdpConnection
         if (Player is null)
             return;
 
-        SendFriendOffline();
+        // Each cleanup step runs on its own, so one failure (for example a
+        // database error while saving) can no longer skip Player.Dispose and
+        // leave a "ghost" player in the zone that still shows on maps.
+        RunTerminationStep(nameof(SendFriendOffline), SendFriendOffline);
+        RunTerminationStep(nameof(SendGuildMemberOffline), SendGuildMemberOffline);
+        RunTerminationStep("TradeManager.OnDisconnected", () => _serviceProvider.GetRequiredService<ITradeManager>().OnDisconnected(Player));
+        RunTerminationStep("SendCharacterLogout", () => _loginClient.SendCharacterLogout(GuidHelper.GetPlayerId(Player.Guid)));
+        RunTerminationStep(nameof(SavePlayerToDatabase), SavePlayerToDatabase);
+        RunTerminationStep("Player.Dispose", Player.Dispose);
 
-        SendGuildMemberOffline();
+        // Belt and braces: make sure the player is gone from the zone even if
+        // Dispose failed part way through.
+        RunTerminationStep("Zone.TryRemovePlayer", () => Player.Zone.TryRemovePlayer(Player.Guid));
+    }
 
-        _serviceProvider.GetRequiredService<ITradeManager>().OnDisconnected(Player);
-
-        _loginClient.SendCharacterLogout(GuidHelper.GetPlayerId(Player.Guid));
-
-        SavePlayerToDatabase();
-
-        Player.Dispose();
+    private void RunTerminationStep(string step, Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{connection} failed during disconnect cleanup step {step}.", this, step);
+        }
     }
 
     public override void OnRoutePacket(Span<byte> data)
@@ -219,6 +233,8 @@ public class GatewayConnection : UdpConnection
 
         Player = player;
 
+        Player.UserId = dbCharacter.UserId;
+
         // Start - ClientPcData
 
         Player.Model = dbCharacter.Model;
@@ -250,6 +266,7 @@ public class GatewayConnection : UdpConnection
             : startingZone.SpawnRotation;
 
         Player.UpdatePosition(position, rotation);
+        Player.ResetMovementValidation();
 
         Player.Name.FirstName = dbCharacter.FirstName;
         Player.Name.LastName = dbCharacter.LastName ?? string.Empty;
@@ -404,6 +421,7 @@ public class GatewayConnection : UdpConnection
 
         Player.IsAdmin = dbCharacter.User.IsAdmin;
         Player.IsMod = dbCharacter.User.IsMod;
+        Player.IsLead = dbCharacter.User.IsLead;
         Player.MutedUntil = dbCharacter.User.MutedUntil;
 
         foreach (var dbFriend in dbCharacter.Friends)
@@ -524,12 +542,12 @@ public class GatewayConnection : UdpConnection
             rotation = Player.StartingZoneRotation;
         }
 
-        dbCharacter.PositionX = float.IsNaN(position.X) ? null : position.X;
-        dbCharacter.PositionY = float.IsNaN(position.Y) ? null : position.Y;
-        dbCharacter.PositionZ = float.IsNaN(position.Z) ? null : position.Z;
+        dbCharacter.PositionX = !float.IsFinite(position.X) ? null : position.X;
+        dbCharacter.PositionY = !float.IsFinite(position.Y) ? null : position.Y;
+        dbCharacter.PositionZ = !float.IsFinite(position.Z) ? null : position.Z;
 
-        dbCharacter.RotationX = float.IsNaN(rotation.X) ? null : rotation.X;
-        dbCharacter.RotationZ = float.IsNaN(rotation.Z) ? null : rotation.Z;
+        dbCharacter.RotationX = !float.IsFinite(rotation.X) ? null : rotation.X;
+        dbCharacter.RotationZ = !float.IsFinite(rotation.Z) ? null : rotation.Z;
 
         dbCharacter.ActiveProfileId = Player.ActiveProfileId;
 

@@ -29,6 +29,13 @@ public sealed class Player : ClientPcData, IEntity
     private readonly IResourceManager _resourceManager;
     private readonly ITradeManager _tradeManager;
 
+    private DateTimeOffset _lastMovementValidationTime = DateTimeOffset.UtcNow;
+    private int _movementViolationCount;
+
+    private const float MovementSpeedToleranceMultiplier = 1.75f;
+    private const float MovementFixedSlackUnits = 4f;
+    private const int MovementViolationsBeforeKick = 5;
+
     public bool Visible { get; set; }
 
     public IZone Zone { get; set; }
@@ -44,8 +51,11 @@ public sealed class Player : ClientPcData, IEntity
 
     public bool IsAdmin { get; set; }
     public bool IsMod { get; set; }
-    public ChatCommandRole ChatCommandRole => ChatHelper.GetRoleFromFlags(IsAdmin, IsMod);
+    public bool IsLead { get; set; }
+    public ChatCommandRole ChatCommandRole => ChatHelper.GetRoleFromFlags(IsLead, IsAdmin, IsMod);
     public DateTimeOffset? MutedUntil { get; set; }
+
+    public ulong UserId { get; set; }
 
     public ClientPcProfile ActiveProfile =>
         Profiles.FirstOrDefault(x => x.Id == ActiveProfileId) ?? Profiles.First();
@@ -287,6 +297,43 @@ public sealed class Player : ClientPcData, IEntity
         packet.Slot.ForceDismount = true;
         packet.Slot.Unknown15 = elapsed;
         return packet;
+    }
+
+    public void ResetMovementValidation()
+    {
+        _lastMovementValidationTime = DateTimeOffset.UtcNow;
+        _movementViolationCount = 0;
+    }
+
+    public bool ValidateClientPosition(Vector4 newPosition)
+    {
+        if (IsAdmin || IsMod || IsLead)
+            return true;
+
+        var now = DateTimeOffset.UtcNow;
+        var elapsedSeconds = (float)(now - _lastMovementValidationTime).TotalSeconds;
+        _lastMovementValidationTime = now;
+
+        if (elapsedSeconds <= 0f)
+            elapsedSeconds = 0.001f;
+
+        var delta = newPosition - Position;
+        var distance = MathF.Sqrt((delta.X * delta.X) + (delta.Y * delta.Y) + (delta.Z * delta.Z));
+
+        var maxSpeed = Stats[CharacterStatId.MaxMovementSpeed];
+        var allowedDistance = (maxSpeed * elapsedSeconds * MovementSpeedToleranceMultiplier) + MovementFixedSlackUnits;
+
+        if (distance <= allowedDistance)
+        {
+            if (_movementViolationCount > 0)
+                _movementViolationCount--;
+
+            return true;
+        }
+
+        _movementViolationCount++;
+
+        return _movementViolationCount < MovementViolationsBeforeKick;
     }
 
     public void UpdatePosition(Vector4 position, Quaternion rotation, bool updateZoneArea = true)

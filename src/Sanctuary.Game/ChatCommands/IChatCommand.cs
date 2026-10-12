@@ -6,7 +6,8 @@ public enum ChatCommandRole
 {
     Player = 0,
     Mod = 1,
-    Admin = 2
+    Admin = 2,
+    Lead = 3
 }
 
 public interface IChatCommandView

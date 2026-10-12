@@ -14,6 +14,7 @@ using MiniValidation;
 
 using Sanctuary.Database;
 using Sanctuary.Database.Entities;
+using Sanctuary.WebAPI.Helpers;
 using Sanctuary.WebAPI.Models;
 using Sanctuary.WebAPI.Options;
 using Sanctuary.WebAPI.Services;
@@ -55,6 +56,12 @@ public static class AuthEndpoints
         IDbContextFactory<DatabaseContext> dbContextFactory,
         VpnDetectionService vpnDetectionService)
     {
+        if (!LauncherTokenValidator.IsValid(httpContext, webAPIOptions.Value.LauncherSharedSecret, _logger))
+        {
+            _logger.LogWarning("Login rejected - missing or invalid launcher token. ( RemoteIp: {ip} )", httpContext.Connection.RemoteIpAddress);
+            return Results.Unauthorized();
+        }
+
         if (!MiniValidator.TryValidate(request, out var errors))
             return Results.ValidationProblem(errors);
 
@@ -126,6 +133,12 @@ public static class AuthEndpoints
         IDbContextFactory<DatabaseContext> dbContextFactory,
         VpnDetectionService vpnDetectionService)
     {
+        if (!LauncherTokenValidator.IsValid(httpContext, webAPIOptions.Value.LauncherSharedSecret, _logger))
+        {
+            _logger.LogWarning("Registration rejected - missing or invalid launcher token. ( RemoteIp: {ip} )", httpContext.Connection.RemoteIpAddress);
+            return Results.Unauthorized();
+        }
+
         if (!MiniValidator.TryValidate(request, out var errors))
             return Results.ValidationProblem(errors);
 

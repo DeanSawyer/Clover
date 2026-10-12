@@ -43,6 +43,7 @@ services:
       - Server__LoginGatewayChallenge=${LOGIN_GATEWAY_CHALLENGE:?Set LOGIN_GATEWAY_CHALLENGE in .env}
       - VpnApi__ApiKey=${VPNAPI_API_KEY}
       - Urls=http://0.0.0.0:20040
+      - WebAPI__LauncherSharedSecret=${CLOVER_LAUNCHER_SECRET}
     depends_on:
       sanctuary.mysql:
         condition: service_healthy

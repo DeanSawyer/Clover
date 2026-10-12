@@ -28,13 +28,21 @@ public class TeleportCommand : IChatCommand
             return false;
         }
 
-        var position = invoker.Position;
+        var position = new System.Numerics.Vector4(x, y, z, invoker.Position.W);
 
+        // Bug fix: this previously re-applied the player's OLD position instead
+        // of the new x/y/z, so the server's own tracking never actually moved -
+        // only the client's displayed position did. Beyond being wrong on its
+        // own, that left the server thinking the next real movement packet from
+        // this player started at their pre-teleport spot, which the position
+        // anti-cheat (Player.ValidateClientPosition) would have flagged as an
+        // impossible jump the moment they took a single step after !teleport.
         invoker.UpdatePosition(position, System.Numerics.Quaternion.Identity, false);
+        invoker.ResetMovementValidation();
 
         var clientUpdatePacketUpdateLocation = new ClientUpdatePacketUpdateLocation
         {
-            Position = new System.Numerics.Vector4(x, y, z, position.W),
+            Position = position,
             Rotation = System.Numerics.Quaternion.Identity,
             Teleport = true
         };
