@@ -50,6 +50,19 @@ public static class CoinStoreSellToClientRequestPacketHandler
             }
         };
 
+        // CloverEconomyGuard: quantity must be positive and sane, otherwise a modified client
+        // can send a negative amount and flip the coin/item math.
+        if (packet.Quantity <= 0 || packet.Quantity > 9999)
+        {
+            _logger.LogWarning("Rejected coin store buy with invalid quantity {quantity} from {guid}", packet.Quantity, connection.Player.Guid);
+
+            coinStoreTransactionCompletePacket.Result = 8;
+
+            connection.SendTunneled(coinStoreTransactionCompletePacket);
+
+            return true;
+        }
+
         if (!_resourceManager.ClientItemDefinitions.TryGetValue(packet.ItemRecord.Definition, out var clientItemDefinition))
         {
             _logger.LogWarning("User tried to buy unknown item definition. {guid} {definition}", connection.Player.Guid, packet.ItemRecord.Definition);
@@ -76,7 +89,19 @@ public static class CoinStoreSellToClientRequestPacketHandler
             ? clientItemDefinition.Cost
             : clientItemDefinition.GetMemberPurchasePrice();
 
-        var totalCost = cost * packet.Quantity;
+        // CloverEconomyGuard: do the multiply in 64 bits so a huge quantity cannot wrap to a negative cost.
+        var totalCostLong = (long)cost * packet.Quantity;
+
+        if (cost < 0 || totalCostLong > int.MaxValue)
+        {
+            coinStoreTransactionCompletePacket.Result = 7;
+
+            connection.SendTunneled(coinStoreTransactionCompletePacket);
+
+            return true;
+        }
+
+        var totalCost = (int)totalCostLong;
 
         if (connection.Player.Coins < totalCost)
         {

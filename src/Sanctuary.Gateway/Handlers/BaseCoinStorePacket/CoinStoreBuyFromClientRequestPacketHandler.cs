@@ -47,6 +47,19 @@ public static class CoinStoreBuyFromClientRequestPacketHandler
             }
         };
 
+        // CloverEconomyGuard: quantity must be positive and sane, otherwise a modified client
+        // can send a negative amount and flip the coin/item math.
+        if (packet.Quantity <= 0 || packet.Quantity > 9999)
+        {
+            _logger.LogWarning("Rejected coin store sell with invalid quantity {quantity} from {guid}", packet.Quantity, connection.Player.Guid);
+
+            coinStoreTransactionCompletePacket.Result = 8;
+
+            connection.SendTunneled(coinStoreTransactionCompletePacket);
+
+            return true;
+        }
+
         var clientItem = connection.Player.Items.SingleOrDefault(x => x.Id == packet.ItemGuid);
 
         if (clientItem is null)
