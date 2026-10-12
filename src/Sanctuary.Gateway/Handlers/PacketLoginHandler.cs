@@ -171,6 +171,13 @@ public static class PacketLoginHandler
             ProfileHelper.AddSpecialProfile(character, dbContext, _resourceManager, _logger, SpecialProfileIds.Enforcer);
         else
             ProfileHelper.RemoveSpecialProfile(character, dbContext, _logger, SpecialProfileIds.Enforcer);
+
+        // Leader is the Project Lead's own job: only IsLead gets it (IsLead
+        // also gets Referee and Enforcer above).
+        if (character.User.IsLead)
+            ProfileHelper.AddSpecialProfile(character, dbContext, _resourceManager, _logger, SpecialProfileIds.Leader);
+        else
+            ProfileHelper.RemoveSpecialProfile(character, dbContext, _logger, SpecialProfileIds.Leader);
 #if !DEBUG
         var result = dbContext.Characters
             .Where(x => x.Id == character.Id)

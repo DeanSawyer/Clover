@@ -716,7 +716,7 @@ public sealed class Player : ClientPcData, IEntity
 
     public PlayerUpdatePacketAddPc GetAddPcPacket()
     {
-        bool isReferee = IsMod || IsAdmin;
+        bool isReferee = IsMod || IsAdmin || IsLead;
         var packet = new PlayerUpdatePacketAddPc
         {
             Guid = Guid,
