@@ -716,7 +716,9 @@ public sealed class Player : ClientPcData, IEntity
 
     public PlayerUpdatePacketAddPc GetAddPcPacket()
     {
-        bool isReferee = IsMod || IsAdmin || IsLead;
+        // IsReferee is the Free Realms "invisible referee" flag: other clients
+        // hide the player, which is what made staff invisible. Never send it.
+        bool isReferee = false;
         var packet = new PlayerUpdatePacketAddPc
         {
             Guid = Guid,
@@ -748,7 +750,8 @@ public sealed class Player : ClientPcData, IEntity
             MaxMovementSpeed = Stats[CharacterStatId.MaxMovementSpeed],
 
             IsUnderage = Age < 18,
-            IsMember = MembershipStatus != 0,
+            // Everyone shows the non-member name color to other players.
+            IsMember = false,
             IsReferee = isReferee,
 
             TemporaryAppearance = TemporaryAppearance,
@@ -777,6 +780,53 @@ public sealed class Player : ClientPcData, IEntity
             packet.Guilds.Add(0, GuildData.Guid);
 
         return packet;
+    }
+
+    // Staff jobs wear a forced "<Job> <name>" title with the job icon. The
+    // title only exists while that job is active and is never saved.
+    private static readonly Dictionary<int, int> StaffJobTitles = new()
+    {
+        [(int)SpecialProfileIds.Enforcer] = 91,
+        [(int)SpecialProfileIds.Referee] = 92,
+        [(int)SpecialProfileIds.Leader] = 93,
+    };
+
+    public static bool IsStaffJobTitle(int titleId) => StaffJobTitles.ContainsValue(titleId);
+
+    public bool IsInStaffJob => StaffJobTitles.ContainsKey(ActiveProfileId);
+
+    // Adds/forces the title for the active staff job, or removes it when the
+    // player is in any other job. Returns true if the active title changed.
+    public bool ApplyStaffJobTitle()
+    {
+        var previousTitle = ActiveTitle;
+
+        Titles.RemoveAll(x => StaffJobTitles.ContainsValue(x.Id));
+
+        if (StaffJobTitles.TryGetValue(ActiveProfileId, out var titleId)
+            && _resourceManager.PlayerTitles.TryGetValue(titleId, out var title))
+        {
+            Titles.Add(title);
+            ActiveTitle = titleId;
+        }
+        else if (StaffJobTitles.ContainsValue(ActiveTitle))
+        {
+            ActiveTitle = 0;
+        }
+
+        return ActiveTitle != previousTitle;
+    }
+
+    public void BroadcastActiveTitle()
+    {
+        var packet = new PlayerUpdatePacketPlayerTitle { Guid = Guid };
+
+        var title = Titles.FirstOrDefault(x => x.Id == ActiveTitle);
+
+        if (title is not null)
+            packet.Title = title;
+
+        SendTunneledToVisible(packet, true);
     }
 
     public const int ChangeFormBuffIconId = 3843;

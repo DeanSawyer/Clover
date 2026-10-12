@@ -30,6 +30,13 @@ public static class PlayerTitleRequestSelectPacketHandler
 
         _logger.LogTrace("Received {name} packet. ( {packet} )", nameof(PlayerTitleRequestSelectPacket), packet);
 
+        // Staff jobs keep their forced job title.
+        if (connection.Player.IsInStaffJob)
+        {
+            connection.Player.BroadcastActiveTitle();
+            return true;
+        }
+
         var selectedTitle = connection.Player.Titles.FirstOrDefault(x => x.Id == packet.Id);
 
         connection.Player.ActiveTitle = selectedTitle is null ? 0 : selectedTitle.Id;

@@ -69,6 +69,9 @@ public static class CommandPacketSetProfileHandler
 
         connection.Player.SendToolbar();
 
+        if (connection.Player.ApplyStaffJobTitle())
+            connection.Player.BroadcastActiveTitle();
+
         var friendStatusPacket = new FriendStatusPacket
         {
             Guid = connection.Player.Guid,

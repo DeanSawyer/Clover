@@ -501,5 +501,23 @@
     "Id": 90,
     "Type": 1,
     "NameId": 10395
+  },
+  {
+    "Id": 91,
+    "Type": 1,
+    "NameId": 2301,
+    "IconId": 11562
+  },
+  {
+    "Id": 92,
+    "Type": 1,
+    "NameId": 23268,
+    "IconId": 14
+  },
+  {
+    "Id": 93,
+    "Type": 1,
+    "NameId": 4003,
+    "IconId": 11372
   }
 ]

@@ -1776,7 +1776,7 @@
     "NameId": 23268,
     "DescriptionId": 2302,
     "Type": 9,
-    "Icon": 258,
+    "Icon": 14,
     "BadgeImageSet": 19,
     "ButtonImageSet": 21,
     "AbilityBgImageSet": 4,
@@ -1891,7 +1891,7 @@
     "NameId": 2301,
     "DescriptionId": 2302,
     "Type": 9,
-    "Icon": 258,
+    "Icon": 11562,
     "BadgeImageSet": 19,
     "ButtonImageSet": 21,
     "AbilityBgImageSet": 4,
@@ -1994,11 +1994,7 @@
         "Unknown": 0
       }
     },
-    "DefaultItems": [
-      13682,
-      421,
-      429
-    ]
+    "DefaultItems": []
   },
   {
     "Comment": "Leader",
@@ -2006,7 +2002,7 @@
     "NameId": 4003,
     "DescriptionId": 2302,
     "Type": 9,
-    "Icon": 258,
+    "Icon": 11370,
     "BadgeImageSet": 19,
     "ButtonImageSet": 21,
     "AbilityBgImageSet": 4,
@@ -2109,10 +2105,6 @@
         "Unknown": 0
       }
     },
-    "DefaultItems": [
-      13682,
-      421,
-      429
-    ]
+    "DefaultItems": []
   }
 ]

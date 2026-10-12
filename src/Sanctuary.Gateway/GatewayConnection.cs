@@ -411,6 +411,8 @@ public class GatewayConnection : UdpConnection
 
         Player.ActiveTitle = dbCharacter.ActiveTitleId ?? 0;
 
+        Player.ApplyStaffJobTitle();
+
         Player.VipRank = dbCharacter.VipRank;
 
         // End ClientPcData
@@ -551,7 +553,7 @@ public class GatewayConnection : UdpConnection
 
         dbCharacter.ActiveProfileId = Player.ActiveProfileId;
 
-        dbCharacter.ActiveTitleId = Player.ActiveTitle;
+        dbCharacter.ActiveTitleId = Player.IsStaffJobTitle(Player.ActiveTitle) ? 0 : Player.ActiveTitle;
 
         if (dbCharacter.LastLogin.HasValue)
             dbCharacter.PlayTime += (int)(DateTimeOffset.UtcNow - dbCharacter.LastLogin.Value).TotalMinutes;
