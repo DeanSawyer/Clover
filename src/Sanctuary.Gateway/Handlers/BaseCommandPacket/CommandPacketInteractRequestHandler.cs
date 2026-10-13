@@ -35,6 +35,7 @@ public static class CommandPacketInteractRequestHandler
         _logger = loggerFactory.CreateLogger(nameof(CommandPacketInteractRequestHandler));
         _dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<DatabaseContext>>();
         _resourceManager = serviceProvider.GetRequiredService<IResourceManager>();
+        _questManager = serviceProvider.GetRequiredService<IQuestManager>();
     }
 
     public static bool HandlePacket(GatewayConnection connection, ReadOnlySpan<byte> data)
