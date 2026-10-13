@@ -67,6 +67,8 @@ A few notes for contributors:
 
 Built on top of the open source [Sanctuary](https://github.com/Open-Source-Free-Realms/Sanctuary) FreeRealms server emulator by Open Source Free Realms, licensed under AGPL-3.0. This repository is Clover's own actively developed codebase, not a passive mirror - see [LICENSE](LICENSE) for full attribution.
 
+The quest system is based on work by JadenY and Nate, also licensed under AGPL-3.0.
+
 ## License
 
 AGPL-3.0 - see [LICENSE](LICENSE) for the full text.
