@@ -16,6 +16,11 @@ public static class PacketZoneTeleportRequestHandler
     private static ILogger _logger = null!;
     private static IResourceManager _resourceManager = null!;
 
+    // CloverPoiSpawnOffset tuning, in meters.
+    private const float PoiClearance = 1.5f;
+    private const float PoiStepOut = 3.5f;
+    private const float PoiDropHeight = 1.5f;
+
     public static void ConfigureServices(IServiceProvider serviceProvider)
     {
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
@@ -45,6 +50,26 @@ public static class PacketZoneTeleportRequestHandler
 
         var position = pointOfInterest.SpawnPosition;
         var rotation = new Quaternion(rotationZ, 0f, rotationX, 0f);
+
+        // CloverPoiSpawnOffset: activity points (chess tables, cooking tables, launch pads...)
+        // usually have no spawn spot of their own, so the player lands inside the object.
+        // Step out to the side of it and drop in from a little above, facing it.
+        if (pointOfInterest.NotificationType == global::Sanctuary.Packet.Common.PointOfInterestNotificationType.Local)
+        {
+            var dx = position.X - pointOfInterest.Position.X;
+            var dz = position.Z - pointOfInterest.Position.Z;
+
+            if (dx * dx + dz * dz < PoiClearance * PoiClearance)
+            {
+                position = new Vector4(
+                    pointOfInterest.Position.X + rotationZ * PoiStepOut,
+                    pointOfInterest.Position.Y + PoiDropHeight,
+                    pointOfInterest.Position.Z + rotationX * PoiStepOut,
+                    position.W);
+
+                rotation = new Quaternion(-rotationZ, 0f, -rotationX, 0f);
+            }
+        }
 
         global::Sanctuary.Game.Eye.Log("teleport", connection.Player, new { kind = "point", point = packet.Id, to = new[] { position.X, position.Y, position.Z } });
 
