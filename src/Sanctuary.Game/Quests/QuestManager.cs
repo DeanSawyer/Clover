@@ -230,6 +230,8 @@ public sealed class QuestManager : IQuestManager
         player.ActiveQuestId = questId;
         player.LastQuestAcceptedAt = DateTime.UtcNow;
 
+        global::Sanctuary.Game.Eye.Log("quest-accept", player, new { quest = questId });
+
         using (var db = _dbContextFactory.CreateDbContext())
         {
             db.CharacterQuests.Add(new DbCharacterQuest
@@ -275,6 +277,8 @@ public sealed class QuestManager : IQuestManager
 
         SendJournalQuestStates(player);
 
+        global::Sanctuary.Game.Eye.Log("quest-complete", player, new { quest = questId, rewardCoins = quest.RewardCoins, rewardItems = quest.RewardItems });
+
         GrantReward(player, quest);
 
         RefreshQuestNotifications(player, quest);
@@ -316,6 +320,8 @@ public sealed class QuestManager : IQuestManager
                 db.SaveChanges();
             }
         }
+
+        global::Sanctuary.Game.Eye.Log("quest-abandon", player, new { quest = questId });
 
         player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
 

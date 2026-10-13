@@ -23,6 +23,9 @@ public static class ChangeNameRequestPacketHandler
     private static IDbContextFactory<DatabaseContext> _dbContextFactory = null!;
     private static IResourceManager _resourceManager = null!;
 
+    // "Character Name Change" (StringHashToValue: NameChange.CharacterItem).
+    private const int CharacterNameChangeItemId = 79000;
+
     public static void ConfigureServices(IServiceProvider serviceProvider)
     {
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
@@ -113,15 +116,49 @@ public static class ChangeNameRequestPacketHandler
         if (dbCharacter is null)
             return ChangeNameResponse.Error;
 
+        // A character rename costs one Character Name Change item (Station Cash shop).
+        var nameChangeItem = connection.Player.Items.FirstOrDefault(x => x.Definition == CharacterNameChangeItemId && x.Count > 0);
+
+        var dbNameChangeItem = nameChangeItem is null
+            ? null
+            : dbContext.Items.SingleOrDefault(x => x.CharacterId == dbCharacter.Id && x.Id == nameChangeItem.Id);
+
+        if (nameChangeItem is null || dbNameChangeItem is null || dbNameChangeItem.Count <= 0)
+        {
+            global::Sanctuary.Game.Eye.Log("rename-denied", connection.Player, new { reason = "no name change item", wanted = packet.Name.FullName });
+            return ChangeNameResponse.MissingItem;
+        }
+
         var taken = dbContext.Characters.Any(x => x.FirstName == packet.Name.FirstName && x.LastName == packet.Name.LastName);
         if (taken)
             return ChangeNameResponse.Error;
+
+        var oldName = connection.Player.Name.FullName;
+        var itemUsedUp = dbNameChangeItem.Count <= 1;
+
+        if (itemUsedUp)
+            dbContext.Items.Remove(dbNameChangeItem);
+        else
+            dbNameChangeItem.Count -= 1;
 
         dbCharacter.FirstName = packet.Name.FirstName;
         dbCharacter.LastName = packet.Name.LastName;
 
         if (dbContext.SaveChanges() <= 0)
             return ChangeNameResponse.Error;
+
+        if (itemUsedUp)
+        {
+            connection.Player.Items.Remove(nameChangeItem);
+            connection.SendTunneled(new ClientUpdatePacketItemDelete { ItemGuid = nameChangeItem.Id });
+        }
+        else
+        {
+            nameChangeItem.Count = dbNameChangeItem.Count;
+            connection.SendTunneled(new ClientUpdatePacketItemUpdate { ItemGuid = nameChangeItem.Id, Count = nameChangeItem.Count });
+        }
+
+        global::Sanctuary.Game.Eye.Log("rename", connection.Player, new { from = oldName, to = packet.Name.FullName });
 
         connection.Player.Name.FirstName = packet.Name.FirstName;
         connection.Player.Name.LastName = packet.Name.LastName;

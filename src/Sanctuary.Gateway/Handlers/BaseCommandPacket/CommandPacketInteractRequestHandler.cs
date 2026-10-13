@@ -54,6 +54,9 @@ public static class CommandPacketInteractRequestHandler
         if (entity is CollectionNode collectionNode)
             return HandleCollectionNode(connection, collectionNode);
 
+        if (entity is Npc rangeCheckedNpc && !IsWithinNpcInteractRange(connection, rangeCheckedNpc))
+            return true;
+
         if (entity is Npc npc && _questManager.IsQuestNpc(npc.Guid))
         {
             connection.Player.LastInteractNpcGuid = npc.Guid;
@@ -65,6 +68,25 @@ public static class CommandPacketInteractRequestHandler
 
         entity.OnInteract(connection.Player);
         return true;
+    }
+
+    // Same limit the client uses for the npc radial menu, plus a little slack for latency.
+    private static bool IsWithinNpcInteractRange(GatewayConnection connection, Npc npc)
+    {
+        var playerPosition = connection.Player.Position;
+        var npcPosition = npc.Position;
+
+        var distance = Vector3.Distance(
+            new Vector3(playerPosition.X, playerPosition.Y, playerPosition.Z),
+            new Vector3(npcPosition.X, npcPosition.Y, npcPosition.Z));
+
+        var allowed = Math.Max(npc.InteractRange, 5) * 1.25f + 3f;
+
+        if (distance <= allowed)
+            return true;
+
+        global::Sanctuary.Game.Eye.Log("interact-out-of-range", connection.Player, new { npc = npc.Guid, distance = MathF.Round(distance, 1), allowed });
+        return false;
     }
 
     private static bool HandleCollectionNode(GatewayConnection connection, CollectionNode node)
