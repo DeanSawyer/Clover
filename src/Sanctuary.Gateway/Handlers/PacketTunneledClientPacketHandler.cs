@@ -15,6 +15,9 @@ public static class PacketTunneledClientPacketHandler
 {
     private static ILogger _logger = null!;
 
+    // CloverClientMessages: PacketClientLogout has no body, just the opcode.
+    private const short ClientLogoutOpCode = 16;
+
     public static void ConfigureServices(IServiceProvider serviceProvider)
     {
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
@@ -68,6 +71,7 @@ public static class PacketTunneledClientPacketHandler
             BaseNameChangePacket.OpCode => BaseNameChangePacketHandler.HandlePacket(connection, reader),
             BaseUiPacket.OpCode => BaseUiPacketHandler.HandlePacket(connection, reader),
             ClientPathBasePacket.OpCode => ClientPathBasePacketHandler.HandlePacket(connection, reader),
+            ClientLogoutOpCode => HandleClientLogout(connection),
             _ => false
         };
 
@@ -86,5 +90,17 @@ public static class PacketTunneledClientPacketHandler
 #endif
 
         return handled;
+    }
+
+    // CloverClientMessages: the player chose Log Out / Exit. Close the connection now so
+    // the normal disconnect cleanup runs (friends and guild offline, save, leave the zone)
+    // instead of leaving them on the map until the connection times out.
+    private static bool HandleClientLogout(GatewayConnection connection)
+    {
+        _logger.LogInformation("{connection} requested logout.", connection);
+
+        connection.Disconnect();
+
+        return true;
     }
 }
