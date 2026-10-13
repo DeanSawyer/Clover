@@ -457,6 +457,15 @@ public sealed class TradeCommitter : ITradeCommitter
 
         player.Coins = plan.FinalCoins;
 
+        global::Sanctuary.Game.Eye.Log("trade", player, new
+        {
+            coinsBefore = previousCoins,
+            coinsAfter = plan.FinalCoins,
+            removed = deleted.Select(i => new { i.Id, i.Definition, i.Count }).ToArray(),
+            changed = updated.Select(u => new { u.Item1.Id, u.Item1.Definition, u.Item1.Count }).ToArray(),
+            added = added.Select(p => new { p.ItemId, p.Definition, p.Count }).ToArray()
+        });
+
         foreach (ClientItem item in deleted)
         {
             player.SendTunneled(new ClientUpdatePacketItemDelete

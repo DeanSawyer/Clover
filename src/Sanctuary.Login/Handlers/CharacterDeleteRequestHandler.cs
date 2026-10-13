@@ -23,6 +23,7 @@ public static class CharacterDeleteRequestHandler
     {
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         _logger = loggerFactory.CreateLogger(nameof(CharacterDeleteRequestHandler));
+        global::Sanctuary.Game.Eye.Initialize(loggerFactory);
 
         _dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<DatabaseContext>>();
     }
@@ -140,6 +141,15 @@ public static class CharacterDeleteRequestHandler
 
             return true;
         }
+
+        global::Sanctuary.Game.Eye.Log("character-delete", null, new
+        {
+            userId = connection.UserId,
+            characterId = character.Id,
+            name = (character.FirstName + " " + character.LastName).Trim(),
+            coins = character.Coins,
+            ip = connection.EndPoint.Address.ToString()
+        });
 
         characterDeleteReply.Status = 1;
         characterDeleteReply.EntityKey = packet.EntityKey;

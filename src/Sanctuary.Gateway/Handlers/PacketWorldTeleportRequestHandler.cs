@@ -39,6 +39,8 @@ public static class PacketWorldTeleportRequestHandler
         var position = player.Position;
         var rotation = player.Rotation;
 
+        global::Sanctuary.Game.Eye.Log("teleport", connection.Player, new { kind = "to-player", target = player.Name.FullName, to = new[] { position.X, position.Y, position.Z } });
+
         connection.Player.UpdatePosition(position, rotation, updateZoneArea: false);
         connection.Player.ResetMovementValidation();
 

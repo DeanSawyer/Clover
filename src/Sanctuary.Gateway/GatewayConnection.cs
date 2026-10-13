@@ -79,6 +79,8 @@ public class GatewayConnection : UdpConnection
         if (Player is null)
             return;
 
+        global::Sanctuary.Game.Eye.Log("logout", Player, new { reason = reason.ToString(), packets = global::Sanctuary.Game.Eye.TakePacketCounts(Player.Guid) });
+
         // Each cleanup step runs on its own, so one failure (for example a
         // database error while saving) can no longer skip Player.Dispose and
         // leave a "ghost" player in the zone that still shows on maps.

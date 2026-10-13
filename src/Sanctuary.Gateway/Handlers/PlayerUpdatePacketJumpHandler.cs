@@ -53,6 +53,8 @@ public static class PlayerUpdatePacketJumpHandler
 
     private static void ReportAntiCheatKick(GatewayConnection connection, string reason)
     {
+        global::Sanctuary.Game.Eye.Log("anticheat-kick", connection.Player, new { reason });
+
         try
         {
             using var dbContext = _dbContextFactory.CreateDbContext();

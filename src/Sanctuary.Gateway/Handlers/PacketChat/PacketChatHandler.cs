@@ -66,6 +66,14 @@ public static class PacketChatHandler
             return false;
         }
         
+        global::Sanctuary.Game.Eye.Log("chat", connection.Player, new
+        {
+            channel = packet.Channel.ToString(),
+            to = packet.ToName?.FullName,
+            msg = packet.Message,
+            muted = connection.Player.IsMuted()
+        });
+
         if (packet.Message.StartsWith(_chatCommandManager.Prefix))
         {
             if (!_chatCommandManager.TryHandle(connection.Player, packet.Message))

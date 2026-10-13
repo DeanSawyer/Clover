@@ -29,6 +29,7 @@ public static class CharacterCreateRequestHandler
     {
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         _logger = loggerFactory.CreateLogger(nameof(CharacterCreateRequestHandler));
+        global::Sanctuary.Game.Eye.Initialize(loggerFactory);
 
         _resourceManager = serviceProvider.GetRequiredService<IResourceManager>();
         _dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<DatabaseContext>>();
@@ -334,6 +335,14 @@ public static class CharacterCreateRequestHandler
 
             return true;
         }
+
+        global::Sanctuary.Game.Eye.Log("character-create", null, new
+        {
+            userId = connection.UserId,
+            characterId = dbCharacter.Id,
+            name = (dbCharacter.FirstName + " " + dbCharacter.LastName).Trim(),
+            ip = connection.EndPoint.Address.ToString()
+        });
 
         characterCreateReply.Result = 1;
         characterCreateReply.Guid = GuidHelper.GetPlayerGuid(dbCharacter.Id);

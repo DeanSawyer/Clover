@@ -19,6 +19,7 @@ public static class PacketTunneledClientWorldPacketHandler
     {
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         _logger = loggerFactory.CreateLogger(nameof(PacketTunneledClientWorldPacketHandler));
+        global::Sanctuary.Game.Eye.Initialize(loggerFactory);
     }
 
     public static bool HandlePacket(GatewayConnection connection, Span<byte> data)
@@ -50,6 +51,8 @@ public static class PacketTunneledClientWorldPacketHandler
             WallOfDataBasePacket.OpCode => WallOfDataBasePacketHandler.HandlePacket(connection, reader),
             _ => false
         };
+
+        global::Sanctuary.Game.Eye.Packet(connection.Player, packet.Payload, handled, "world", false);
 
 #if DEBUG
         if (!handled)

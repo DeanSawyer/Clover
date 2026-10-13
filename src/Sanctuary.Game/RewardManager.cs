@@ -127,6 +127,8 @@ public class RewardManager : IRewardManager
             });
         }
 
+        global::Sanctuary.Game.Eye.Log("item-reward", player, new { item = itemDefinitionId, tint, quantity, newCount = clientItem.Count, source = sourceGuid });
+
         SendRewardToast(player, clientItem, itemDefinition, quantity, sourceGuid);
 
         return true;
@@ -159,6 +161,8 @@ public class RewardManager : IRewardManager
         player.Coins = dbCharacter.Coins;
 
         player.SendTunneled(new ClientUpdatePacketCoinCount { Coins = player.Coins });
+
+        global::Sanctuary.Game.Eye.Log("coin-reward", player, new { amount });
 
         return true;
     }

@@ -243,6 +243,8 @@ public static class CoinStoreSellToClientRequestPacketHandler
 
         coinStoreTransactionCompletePacket.TransactionRecord.Quantity = packet.Quantity;
 
+        global::Sanctuary.Game.Eye.Log("store-buy", connection.Player, new { item = clientItem.Definition, tint = clientItem.Tint, quantity = packet.Quantity, cost = totalCost });
+
         connection.SendTunneled(coinStoreTransactionCompletePacket);
 
         connection.Player.CoinStoreTransactions.Add(coinStoreTransactionCompletePacket.TransactionRecord);

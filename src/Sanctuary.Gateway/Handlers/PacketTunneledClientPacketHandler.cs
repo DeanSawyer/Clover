@@ -19,6 +19,7 @@ public static class PacketTunneledClientPacketHandler
     {
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         _logger = loggerFactory.CreateLogger(nameof(PacketTunneledClientPacketHandler));
+        global::Sanctuary.Game.Eye.Initialize(loggerFactory);
     }
 
     public static bool HandlePacket(GatewayConnection connection, Span<byte> data)
@@ -66,6 +67,12 @@ public static class PacketTunneledClientPacketHandler
             BaseNameChangePacket.OpCode => BaseNameChangePacketHandler.HandlePacket(connection, reader),
             _ => false
         };
+
+        global::Sanctuary.Game.Eye.Packet(connection.Player, packet.Payload, handled, "client",
+            opCode == PlayerUpdatePacketUpdatePosition.OpCode
+            || opCode == PlayerUpdatePacketCameraUpdate.OpCode
+            || opCode == PacketGameTimeSync.OpCode
+            || opCode == PacketClientMetrics.OpCode);
 
 #if DEBUG
         if (!handled)

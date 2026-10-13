@@ -46,6 +46,8 @@ public static class PacketZoneTeleportRequestHandler
         var position = pointOfInterest.SpawnPosition;
         var rotation = new Quaternion(rotationZ, 0f, rotationX, 0f);
 
+        global::Sanctuary.Game.Eye.Log("teleport", connection.Player, new { kind = "point", point = packet.Id, to = new[] { position.X, position.Y, position.Z } });
+
         connection.Player.UpdatePosition(position, rotation, updateZoneArea: false);
         connection.Player.ResetMovementValidation();
 

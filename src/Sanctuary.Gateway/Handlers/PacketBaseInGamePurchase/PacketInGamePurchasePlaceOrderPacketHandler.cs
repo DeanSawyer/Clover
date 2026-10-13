@@ -83,11 +83,36 @@ public static class PacketInGamePurchasePlaceOrderPacketHandler
             return true;
         }
 
+        // CloverEconomyGuard: quantity must be positive and sane, otherwise a modified client
+        // can send a negative amount and get paid Station Cash instead of spending it.
+        if (orderDetail.Quantity <= 0 || orderDetail.Quantity > 9999)
+        {
+            _logger.LogWarning("Rejected shop order with invalid quantity {quantity} from {guid}", orderDetail.Quantity, connection.Player.Guid);
+
+            packetInGamePurchasePlaceOrderResponse.Result = 2;
+
+            connection.SendTunneled(packetInGamePurchasePlaceOrderResponse);
+
+            return true;
+        }
+
         var cost = connection.Player.MembershipStatus == 0
             ? appStoreBundleDefinition.Price
             : appStoreBundleDefinition.MemberDiscount;
 
-        var totalCost = cost * orderDetail.Quantity;
+        // CloverEconomyGuard: multiply in 64 bits so a huge quantity cannot wrap to a negative cost.
+        var totalCostLong = (long)cost * orderDetail.Quantity;
+
+        if (cost < 0 || totalCostLong > int.MaxValue)
+        {
+            packetInGamePurchasePlaceOrderResponse.Result = 5;
+
+            connection.SendTunneled(packetInGamePurchasePlaceOrderResponse);
+
+            return true;
+        }
+
+        var totalCost = (int)totalCostLong;
 
         if (connection.Player.StationCash < totalCost)
         {
@@ -296,6 +321,17 @@ public static class PacketInGamePurchasePlaceOrderPacketHandler
 
         foreach (var pendingUpdate in pendingUpdates)
             pendingUpdate();
+
+        global::Sanctuary.Game.Eye.Log("shop-buy", connection.Player, new
+        {
+            store = orderDetail.StoreId,
+            bundle = orderDetail.StoreBundleId,
+            quantity = orderDetail.Quantity,
+            tint = orderDetailTint,
+            cost = totalCost,
+            stationCash = connection.Player.StationCash,
+            items = appStoreBundleDefinition.Entries.Select(e => new { item = e.MarketingItemId, e.Quantity }).ToArray()
+        });
 
         packetInGamePurchasePlaceOrderResponse.Result = 1;
 

@@ -44,6 +44,8 @@ public static class CommandPacketSetProfileHandler
 
         connection.Player.ActiveProfileId = packet.Id;
 
+        global::Sanctuary.Game.Eye.Log("job-change", connection.Player, new { job = packet.Id, level = profile.Rank });
+
         var clientUpdatePacketActivateProfile = new ClientUpdatePacketActivateProfile();
 
         using var packetWriter = new PacketWriter();

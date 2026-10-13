@@ -223,6 +223,16 @@ public static class PacketLoginHandler
 
         connection.SendSelfToClient();
 
+        global::Sanctuary.Game.Eye.Log("login", connection.Player, new
+        {
+            ip = connection.EndPoint.Address.ToString(),
+            account = character.User.Username,
+            characterId = character.Id,
+            isLead = character.User.IsLead,
+            isAdmin = character.User.IsAdmin,
+            isMod = character.User.IsMod
+        });
+
         _logger.LogInformation("{address} successfully logged in with character {name} ({id}).", connection.EndPoint.Address, character.FullName, character.Id);
 
         return true;

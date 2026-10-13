@@ -75,6 +75,7 @@ public class ChatCommandManager : IChatCommandManager
 
         if (invoker.ChatCommandRole < cmd.RequiredRole)
         {
+            global::Sanctuary.Game.Eye.Log("command-denied", invoker, new { command = keyWord });
             ChatHelper.SendSystemMessage(invoker, $"You do not have permission to use this command.");
             return true;
         }
@@ -89,6 +90,8 @@ public class ChatCommandManager : IChatCommandManager
 
     public void LogAction(IChatCommand command, Player invoker, string action, string? targetName, string? detail)
     {
+        global::Sanctuary.Game.Eye.Log("staff-action", invoker, new { command = command.KeyWord, action, target = targetName, detail });
+
         _auditLogger.LogInformation("{Command}|{Action}|Actor: \"{ActorName}\" ({ActorGuid}){Target}{Detail}",
             command.KeyWord,
             action,
