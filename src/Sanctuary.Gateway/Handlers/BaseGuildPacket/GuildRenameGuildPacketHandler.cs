@@ -94,8 +94,26 @@ public static class GuildRenameGuildPacketHandler
             return true;
         }
 
+        var oldGuildName = connection.Player.GuildData.Name;
+
+        if (!GuildHelper.TryConsumeNameChangeItem(dbContext, connection, GuildHelper.GuildNameChangeItemId))
+        {
+            global::Sanctuary.Game.Eye.Log("guild-rename-denied", connection.Player, new { reason = "no guild name change item", wanted = guildName });
+
+            connection.SendTunneled(new GuildPaidRenameCheckReplyPacket
+            {
+                Guid = guildGuid,
+                Name = guildName,
+                Result = 4
+            });
+
+            return true;
+        }
+
         if (!GuildHelper.ApplyRename(_zoneManager, dbContext, connection, guildGuid, guildName, out var notifiedPlayers))
             return true;
+
+        global::Sanctuary.Game.Eye.Log("guild-rename", connection.Player, new { guild = guildGuid, from = oldGuildName, to = guildName });
 
         _logger.LogTrace(
             "Guild rename broadcast. GuildGuid: {guildGuid}, Name: \"{name}\", NotifiedPlayers: {notifiedPlayers}",

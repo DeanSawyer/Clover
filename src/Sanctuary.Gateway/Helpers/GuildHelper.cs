@@ -75,6 +75,50 @@ public static class GuildHelper
     /// Persists the new guild name, updates the in-memory guild data for every online
     /// member and notifies them. Returns false when the database update did not apply.
     /// </summary>
+    // "Guild Name Change" (StringHashToValue: NameChange.GuildItem).
+    public const int GuildNameChangeItemId = 79004;
+
+    /// <summary>
+    /// Takes one name change item of the given definition from the player and saves it.
+    /// Returns false, changing nothing, when the player does not have one.
+    /// </summary>
+    public static bool TryConsumeNameChangeItem(DatabaseContext dbContext, GatewayConnection connection, int itemDefinitionId)
+    {
+        var clientItem = connection.Player.Items.FirstOrDefault(x => x.Definition == itemDefinitionId && x.Count > 0);
+
+        if (clientItem is null)
+            return false;
+
+        var characterId = GuidHelper.GetPlayerId(connection.Player.Guid);
+        var dbItem = dbContext.Items.SingleOrDefault(x => x.CharacterId == characterId && x.Id == clientItem.Id);
+
+        if (dbItem is null || dbItem.Count <= 0)
+            return false;
+
+        var usedUp = dbItem.Count <= 1;
+
+        if (usedUp)
+            dbContext.Items.Remove(dbItem);
+        else
+            dbItem.Count -= 1;
+
+        if (dbContext.SaveChanges() <= 0)
+            return false;
+
+        if (usedUp)
+        {
+            connection.Player.Items.Remove(clientItem);
+            connection.SendTunneled(new ClientUpdatePacketItemDelete { ItemGuid = clientItem.Id });
+        }
+        else
+        {
+            clientItem.Count = dbItem.Count;
+            connection.SendTunneled(new ClientUpdatePacketItemUpdate { ItemGuid = clientItem.Id, Count = clientItem.Count });
+        }
+
+        return true;
+    }
+
     public static bool ApplyRename(
         IZoneManager zoneManager,
         DatabaseContext dbContext,

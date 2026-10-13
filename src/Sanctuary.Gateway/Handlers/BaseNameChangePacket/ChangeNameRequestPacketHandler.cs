@@ -211,8 +211,18 @@ public static class ChangeNameRequestPacketHandler
         if (GuildHelper.IsNameTaken(dbContext, guildGuid, guildName))
             return ChangeNameResponse.Error;
 
+        var oldGuildName = connection.Player.GuildData.Name;
+
+        if (!GuildHelper.TryConsumeNameChangeItem(dbContext, connection, GuildHelper.GuildNameChangeItemId))
+        {
+            global::Sanctuary.Game.Eye.Log("guild-rename-denied", connection.Player, new { reason = "no guild name change item", wanted = guildName });
+            return ChangeNameResponse.MissingItem;
+        }
+
         if (!GuildHelper.ApplyRename(_zoneManager, dbContext, connection, guildGuid, guildName, out _))
             return ChangeNameResponse.Error;
+
+        global::Sanctuary.Game.Eye.Log("guild-rename", connection.Player, new { guild = guildGuid, from = oldGuildName, to = guildName });
 
         return ChangeNameResponse.Pending;
     }

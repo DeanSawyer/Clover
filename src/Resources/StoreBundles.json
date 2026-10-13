@@ -31163,11 +31163,10 @@
         "AltCurrencyPrice":  1,
         "AltPrice":  999999,
         "StoreId":  1,
-        "CategoryGroupId":  10001,
+        "CategoryGroupId":  243,
         "CategoryDisplayOrder":  955000,
         "SkuId":  1,
         "MemberDiscount":  10,
-        "IsMerchantOnly":  true,
         "MembersOnlyPrice":  1
     },
     {
