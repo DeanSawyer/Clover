@@ -30,6 +30,7 @@ public static class BaseCommandPacketHandler
 
         return opCode switch
         {
+            PacketDialogResponse.OpCode => PacketDialogResponseHandler.HandlePacket(connection, reader.Span),
             CommandPacketInteractRequest.OpCode => CommandPacketInteractRequestHandler.HandlePacket(connection, reader.Span),
             CommandPacketInteractionSelect.OpCode => CommandPacketInteractionSelectHandler.HandlePacket(connection, reader.Span),
             CommandPacketSetProfile.OpCode => CommandPacketSetProfileHandler.HandlePacket(connection, reader.Span),
@@ -39,6 +40,7 @@ public static class BaseCommandPacketHandler
             CommandPacketSetChatBubbleColor.OpCode => CommandPacketSetChatBubbleColorHandler.HandlePacket(connection, reader.Span),
             CommandPacketSelectPlayer.OpCode => CommandPacketSelectPlayerHandler.HandlePacket(connection, reader.Span),
             CommandPacketFriendsPositionRequest.OpCode => CommandPacketFriendsPositionRequestHandler.HandlePacket(connection),
+            23 => CommandPacketQuestAbandonHandler.HandlePacket(connection, reader.Span), // CommandPacketQuestAbandon
             CommandPacketIgnoreRequest.OpCode => CommandPacketIgnoreRequestHandler.HandlePacket(connection, reader.Span),
             CommandPacketChatChannelOn.OpCode => CommandPacketChatChannelOnHandler.HandlePacket(connection, reader.Span),
             CommandPacketChatChannelOff.OpCode => CommandPacketChatChannelOffHandler.HandlePacket(connection, reader.Span),
