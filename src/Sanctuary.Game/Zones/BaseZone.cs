@@ -112,6 +112,64 @@ public abstract class BaseZone : IZone, IDisposable
         GetOrCreateScriptContext().FireEvent("start");
 
         ActivateCollectionNodePools();
+
+        PrepareQuestNpcs();
+    }
+
+    /// <summary>
+    /// Gives every spawned npc the quest content names its cursor and interact range, which is what
+    /// makes the client offer an interaction at all. This has to happen before any player sees them:
+    /// the cursor rides along in the packet that first adds an npc to a client, exactly as it does
+    /// for collection nodes.
+    /// </summary>
+    private void PrepareQuestNpcs()
+    {
+        var quests = _resourceManager.Quests;
+
+        if (quests.Count == 0)
+            return;
+
+        var named = new HashSet<ulong>();
+
+        foreach (var quest in quests.Values)
+        {
+            if (quest.GiverGuid != 0)
+                named.Add(quest.GiverGuid);
+
+            if (quest.TargetGuid != 0)
+                named.Add(quest.TargetGuid);
+
+            foreach (var goal in quest.Goals)
+            {
+                foreach (var targetGuid in goal.AllTalkTargetGuids())
+                    named.Add(targetGuid);
+            }
+        }
+
+        var prepared = 0;
+
+        foreach (var npcGuid in named)
+        {
+            if (!_npcs.TryGetValue(npcGuid, out var npc))
+                continue;
+
+            if (quests.TryGetNpcCursorId(npcGuid, out var cursorId))
+                npc.CursorId = cursorId;
+
+            if (quests.TryGetNpcInteractRange(npcGuid, out var interactRange))
+                npc.InteractRange = interactRange;
+
+            prepared++;
+        }
+
+        _logger.LogInformation("{prepared} of {total} quest npc(s) named by the quest content are spawned here.",
+            prepared, named.Count);
+
+        if (prepared < named.Count)
+        {
+            _logger.LogDebug("Quest npc(s) not spawned in this zone: {guids}.",
+                string.Join(", ", named.Where(guid => !_npcs.ContainsKey(guid))));
+        }
     }
 
     public virtual void OnClientIsReady(Player player)

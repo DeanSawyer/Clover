@@ -127,8 +127,9 @@ public sealed class QuestManager : IQuestManager
     {
         var options = GetInteractionOptions(player, npc);
 
-        // This server has no interaction-menu packet, so the first option wins. They are
-        // built turn-ins first, which is what a player walking up to an npc expects.
+        // The first option wins: the menu that would let the player choose between several is
+        // not ported yet. Options are built turn-ins first, which is what a player walking up
+        // to an npc expects.
         if (options.Count > 0)
             options[0].Invoke(player);
     }
@@ -394,6 +395,14 @@ public sealed class QuestManager : IQuestManager
 
         var imageId = player.GetNotificationImageId(npc);
 
+        // The marker over an npc's head is part of the packet that adds the npc, so changing it
+        // means removing the npc from this client and adding it again.
+        player.SendTunneled(new PlayerUpdatePacketRemovePlayer { Guid = npc.Guid });
+
+        var addNpcPacket = npc.GetAddNpcPacket();
+        addNpcPacket.NotificationImageSetId = imageId;
+        player.SendTunneled(addNpcPacket);
+
         if (npc.CursorId != 0)
         {
             var relevance = new PlayerUpdatePacketNpcRelevance();
@@ -402,7 +411,8 @@ public sealed class QuestManager : IQuestManager
             {
                 Guid = npc.Guid,
                 HasCursor = true,
-                CursorId = npc.CursorId
+                CursorId = npc.CursorId,
+                Unknown2 = imageId != 0
             });
 
             player.SendTunneled(relevance);
@@ -421,9 +431,10 @@ public sealed class QuestManager : IQuestManager
                 new NotificationInfo
                 {
                     Guid = npc.Guid,
-                    IconId = imageId,
+                    Combat = false,
+                    ImageId = imageId,
                     NameId = npc.NameId,
-                    ReferenceId = npc.SubTextNameId
+                    SubTextId = npc.SubTextNameId
                 }
             }
         });

@@ -89,18 +89,12 @@ public sealed class StartingZone : BaseZone
 
         _questManager.RestoreJournal(player);
 
+        // Cursors and interact ranges are zone state, set once when the zone starts. What is left
+        // here is the part that differs per player: which npcs show this player a quest marker.
         foreach (var npc in Npcs)
         {
-            if (!_questManager.IsQuestNpc(npc.Guid))
-                continue;
-
-            if (_resourceManager.Quests.TryGetNpcCursorId(npc.Guid, out var cursorId))
-                npc.CursorId = cursorId;
-
-            if (_resourceManager.Quests.TryGetNpcInteractRange(npc.Guid, out var interactRange))
-                npc.InteractRange = interactRange;
-
-            _questManager.RefreshQuestNotification(player, npc.Guid);
+            if (_questManager.IsQuestNpc(npc.Guid))
+                _questManager.RefreshQuestNotification(player, npc.Guid);
         }
     }
 

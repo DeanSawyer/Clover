@@ -17,7 +17,7 @@ public abstract class RewardBundleEntryBase
     public int ItemTextColor;
     public bool MembersOnly;
 
-    internal void Serialize(PacketWriter writer)
+    internal void Serialize(PacketWriter writer, bool writeTail)
     {
         writer.Write((int)Type);
         writer.Write(IsHidden);
@@ -31,7 +31,10 @@ public abstract class RewardBundleEntryBase
         writer.Write(ItemTextColor);
         writer.Write(MembersOnly);
 
-        SerializeData(writer);
+        // The type-specific tail is written for a granted reward only. A preview, such as the
+        // rewards listed on a quest offer, leaves it out.
+        if (writeTail)
+            SerializeData(writer);
     }
 
     protected abstract void SerializeData(PacketWriter writer);

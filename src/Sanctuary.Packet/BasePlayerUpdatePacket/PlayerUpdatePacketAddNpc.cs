@@ -157,7 +157,10 @@ public class PlayerUpdatePacketAddNpc : BasePlayerUpdatePacket, ISerializablePac
 
     public int ActiveProfile;
 
-    public int Unknown67;
+    /// <summary>
+    /// The quest marker over the npc's head. It differs per player.
+    /// </summary>
+    public int NotificationImageSetId;
     public int Unknown68;
 
     public float NameScale;
@@ -300,7 +303,7 @@ public class PlayerUpdatePacketAddNpc : BasePlayerUpdatePacket, ISerializablePac
 
         writer.Write(ActiveProfile);
 
-        writer.Write(Unknown67);
+        writer.Write(NotificationImageSetId);
         writer.Write(Unknown68);
 
         writer.Write(NameScale);

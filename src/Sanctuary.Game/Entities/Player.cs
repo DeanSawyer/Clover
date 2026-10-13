@@ -524,7 +524,11 @@ public sealed class Player : ClientPcData, IEntity
             if (npc is Mount)
                 continue;
 
-            SendTunneled(npc.GetAddNpcPacket());
+            var playerUpdatePacketAddNpc = npc.GetAddNpcPacket();
+
+            playerUpdatePacketAddNpc.NotificationImageSetId = GetNotificationImageId(npc);
+
+            SendTunneled(playerUpdatePacketAddNpc);
         }
 
         var playerUpdatePacketNpcRelevance = new PlayerUpdatePacketNpcRelevance();
@@ -549,10 +553,23 @@ public sealed class Player : ClientPcData, IEntity
 
         foreach (var npc in npcs)
         {
-            if (npc.Notification is null)
-                continue;
+            var questImageId = GetNotificationImageId(npc);
 
-            playerUpdatePacketAddNotifications.Notifications.Add(npc.Notification);
+            if (questImageId != 0)
+            {
+                playerUpdatePacketAddNotifications.Notifications.Add(new NotificationInfo
+                {
+                    Guid = npc.Guid,
+                    Combat = false,
+                    ImageId = questImageId,
+                    NameId = npc.NameId,
+                    SubTextId = npc.SubTextNameId
+                });
+            }
+            else if (npc.Notification is not null)
+            {
+                playerUpdatePacketAddNotifications.Notifications.Add(npc.Notification);
+            }
         }
 
         if (playerUpdatePacketAddNotifications.Notifications.Count > 0)
@@ -1204,7 +1221,7 @@ public sealed class Player : ClientPcData, IEntity
                 return active.NotificationActive;
         }
 
-        return npc.Notification?.IconId ?? 0;
+        return npc.Notification?.ImageId ?? 0;
     }
 
 }
