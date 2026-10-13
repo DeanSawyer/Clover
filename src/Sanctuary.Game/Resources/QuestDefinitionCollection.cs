@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
@@ -31,6 +32,53 @@ public sealed class QuestDefinitionCollection : ObservableConcurrentDictionary<i
     public IReadOnlyList<int> QuestsTargeting(ulong npcGuid) => _byTarget.TryGetValue(npcGuid, out var questIds) ? questIds : NoQuests;
 
     public bool IsQuestNpc(ulong npcGuid) => _byGiver.ContainsKey(npcGuid) || _byTarget.ContainsKey(npcGuid);
+
+    public bool TryGet(int questId, out QuestDefinition definition) => TryGetValue(questId, out definition!);
+
+    private IEnumerable<int> QuestsInvolving(ulong npcGuid) => QuestsOfferedBy(npcGuid).Concat(QuestsTargeting(npcGuid));
+
+    /// <summary>The cursor this npc shows, from the first of its quest goals that asks for one.</summary>
+    public bool TryGetNpcCursorId(ulong npcGuid, out byte cursorId)
+    {
+        foreach (var questId in QuestsInvolving(npcGuid))
+        {
+            if (!TryGet(questId, out var quest))
+                continue;
+
+            foreach (var goal in quest.Goals)
+            {
+                if (goal.CursorId != 0)
+                {
+                    cursorId = goal.CursorId;
+                    return true;
+                }
+            }
+        }
+
+        cursorId = 0;
+        return false;
+    }
+
+    /// <summary>The shortest interact range any of this npc's quest goals asks for.</summary>
+    public bool TryGetNpcInteractRange(ulong npcGuid, out int interactRange)
+    {
+        var shortest = int.MaxValue;
+
+        foreach (var questId in QuestsInvolving(npcGuid))
+        {
+            if (!TryGet(questId, out var quest))
+                continue;
+
+            foreach (var goal in quest.Goals)
+            {
+                if (goal.InteractRange > 0)
+                    shortest = Math.Min(shortest, goal.InteractRange);
+            }
+        }
+
+        interactRange = shortest == int.MaxValue ? 0 : shortest;
+        return interactRange > 0;
+    }
 
     public bool Load(string filePath)
     {

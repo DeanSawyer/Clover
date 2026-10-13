@@ -423,6 +423,19 @@ public class GatewayConnection : UdpConnection
         Player.ChatBubbleBackgroundColor = dbCharacter.ChatBubbleBackgroundColor;
         Player.ChatBubbleSize = dbCharacter.ChatBubbleSize;
 
+        Player.ActiveQuestId = dbCharacter.ActiveQuestId ?? 0;
+
+        foreach (var dbQuest in dbCharacter.Quests)
+        {
+            Player.Quests[dbQuest.QuestId] = dbQuest.Completed;
+
+            if (dbQuest.GoalProgress > 0)
+                Player.QuestGoalProgress[dbQuest.QuestId] = dbQuest.GoalProgress;
+
+            if (dbQuest.GoalCount > 0)
+                Player.QuestCollectProgress[dbQuest.QuestId] = dbQuest.GoalCount;
+        }
+
         Player.IsAdmin = dbCharacter.User.IsAdmin;
         Player.IsMod = dbCharacter.User.IsMod;
         Player.IsLead = dbCharacter.User.IsLead;

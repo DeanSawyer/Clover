@@ -44,6 +44,7 @@ public static class PacketTunneledClientPacketHandler
             PacketClientIsReady.OpCode => PacketClientIsReadyHandler.HandlePacket(connection),
             BaseChatPacket.OpCode => BaseChatPacketHandler.HandlePacket(connection, reader),
             BaseCommandPacket.OpCode => BaseCommandPacketHandler.HandlePacket(connection, reader),
+            BaseQuestPacket.OpCode => BaseQuestPacketHandler.HandlePacket(connection, reader),
             BasePlayerUpdatePacket.OpCode => BasePlayerUpdatePacketHandler.HandlePacket(connection, reader),
             BaseAbilityPacket.OpCode => BaseAbilityPacketHandler.HandlePacket(connection, reader),
             BaseInventoryPacket.OpCode => BaseInventoryPacketHandler.HandlePacket(connection, reader),

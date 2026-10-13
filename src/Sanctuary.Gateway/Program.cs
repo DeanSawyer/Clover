@@ -12,6 +12,7 @@ using Sanctuary.Core.Configuration;
 using Sanctuary.Core.Extensions;
 using Sanctuary.Database;
 using Sanctuary.Game;
+using Sanctuary.Game.Quests;
 using Sanctuary.Game.Trading;
 using Sanctuary.Gateway;
 using Sanctuary.Scripting;
@@ -103,6 +104,7 @@ builder.ConfigureServices((hostBuilderContext, serviceCollection) =>
     serviceCollection.AddSingleton<IInteractionManager, InteractionManager>();
     serviceCollection.AddSingleton<IChatCommandManager, ChatCommandManager>();
     serviceCollection.AddSingleton<IRewardManager, RewardManager>();
+        serviceCollection.AddSingleton<IQuestManager, QuestManager>();
     serviceCollection.AddSingleton<TradeOptions>();
     serviceCollection.AddSingleton<ITradeCommitter, TradeCommitter>();
     serviceCollection.AddSingleton<ITradeManager, TradeManager>();

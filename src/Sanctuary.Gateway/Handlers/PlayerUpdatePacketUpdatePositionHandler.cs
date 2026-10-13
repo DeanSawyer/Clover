@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Sanctuary.Database;
+using Sanctuary.Game;
+using Sanctuary.Game.Quests;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common.Attributes;
 
@@ -15,6 +17,7 @@ public static class PlayerUpdatePacketUpdatePositionHandler
 {
     private static ILogger _logger = null!;
     private static IDbContextFactory<DatabaseContext> _dbContextFactory = null!;
+    private static IQuestManager _questManager = null!;
 
     public static void ConfigureServices(IServiceProvider serviceProvider)
     {
@@ -45,6 +48,8 @@ public static class PlayerUpdatePacketUpdatePositionHandler
         }
 
         connection.Player.UpdatePosition(packet.Position, packet.Rotation);
+
+        _questManager.OnPlayerMoved(connection.Player);
 
         connection.Player.SendTunneledToVisible(packet);
 
